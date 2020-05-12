@@ -524,15 +524,14 @@ endfu
 
 fu s:wrap(command, count) abort "{{{3
     let ticks_synchronized = s:repeat.tick == b:changedtick
-    call feedkeys((a:count ? a:count : '')..a:command, 'n')
-    if &foldopen =~# '\C\<\%(undo\|all\)\>'
-        call feedkeys('zv', 'n')
-    endif
-    " Delay the synchronization until the undo/redo command has been executed.{{{
+    " the `t` flag is necessary for Vim to open folds after an undo
+    call feedkeys((a:count ? a:count : '')..a:command, 'nt')
+    " Delay the synchronization until the undo/redo command has been executed.
+    " Is there an alternative?{{{
     "
-    " You could also try to listen to `SafeState` or `CursorMoved`.
-    "}}}
-    "   Is there an alternative?{{{
+    " You could also listen to `SafeState`, or maybe `CursorMoved`.
+    "
+    " ---
     "
     " You could try to tweak the  flags passed to the previous `feedkeys()`, but
     " it's tricky.
