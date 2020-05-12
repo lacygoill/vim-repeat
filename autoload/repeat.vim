@@ -579,7 +579,7 @@ fu s:wrap(command, count) abort "{{{3
     " https://github.com/tpope/vim-repeat/issues/27
     "}}}
     if ticks_synchronized
-        au TextChanged * ++once let s:repeat.tick = b:changedtick
+        au TextChanged <buffer> ++once let s:repeat.tick = b:changedtick
     endif
 endfu
 
