@@ -479,7 +479,9 @@ fu repeat#invalidate() abort "{{{3
     "
     " See: https://github.com/tpope/vim-repeat/commit/80261bc53193c7e602373c6da78180aabbeb4b77
     "}}}
-    au! repeat_custom_motion
+    if exists('#repeat_custom_motion')
+        au! repeat_custom_motion
+    endif
     return ''
 endfu
 "}}}2
