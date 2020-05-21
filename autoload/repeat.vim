@@ -39,7 +39,7 @@ let g:autoloaded_repeat = 1
 "     " or
 "     :au CursorHold * update
 "
-" Make sure they can trigger events:
+" Make sure they do trigger events:
 "
 "     :update
 "     " or
@@ -527,7 +527,7 @@ endfu
 fu s:wrap(command, count) abort "{{{3
     let ticks_synchronized = s:repeat.tick == b:changedtick
     " the `t` flag is necessary for Vim to open folds after an undo
-    call feedkeys((a:count ? a:count : '')..a:command, 'nt')
+    call feedkeys((a:count ? a:count : '')..a:command, 'int')
     " Delay the synchronization until the undo/redo command has been executed.
     " Is there an alternative?{{{
     "
