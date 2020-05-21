@@ -526,8 +526,9 @@ endfu
 
 fu s:wrap(command, count) abort "{{{3
     let ticks_synchronized = s:repeat.tick == b:changedtick
-    " the `t` flag is necessary for Vim to open folds after an undo
-    call feedkeys((a:count ? a:count : '')..a:command, 'int')
+    " Don't use the `t` flag to make Vim automatically open a possible fold.
+    " During a recording, it would cause the undo/redo command to be recorded twice.
+    call feedkeys((a:count ? a:count : '').a:command.(&foldopen =~# 'undo\|all' ? 'zv' : ''), 'n')
     " Delay the synchronization until the undo/redo command has been executed.
     " Is there an alternative?{{{
     "
