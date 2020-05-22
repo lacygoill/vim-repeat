@@ -528,7 +528,8 @@ fu s:wrap(command, count) abort "{{{3
     let ticks_synchronized = s:repeat.tick == b:changedtick
     " Don't use the `t` flag to make Vim automatically open a possible fold.
     " During a recording, it would cause the undo/redo command to be recorded twice.
-    call feedkeys((a:count ? a:count : '').a:command.(&foldopen =~# 'undo\|all' ? 'zv' : ''), 'n')
+    let seq = (a:count ? a:count : '')..a:command..(&foldopen =~# 'undo\|all' ? 'zv' : '')
+    call feedkeys(seq, 'in')
     " Delay the synchronization until the undo/redo command has been executed.
     " Is there an alternative?{{{
     "
