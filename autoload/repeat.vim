@@ -553,28 +553,11 @@ fu s:wrap(command, count) abort "{{{3
     " typeahead.   Remember that  `:norm` *inserts*  keys, so  it can  limit the
     " execution to only the keys it presses.
     "
-    " Next,  you'll have  to avoid  the  `t` flag,  because it  could cause  the
-    " commands to be recorded twice during a recording.
-    "
-    " Note that Tpope doesn't use it, but:
-    "
-    " >     't' Handle keys as if typed; otherwise they are handled as
-    " >             if coming from a mapping.  **This matters for undo**,
-    " >             opening folds, etc.
-    "
-    " Theory: "This matters for  undo" means that Vim honors `'fdo'`  iff `u` is
-    " handled as if *not* coming from a mapping.
-    " So, if  you want Vim  to automatically open  folds after feeding  `u`, you
-    " need the `t` flag.   If that's the only reason for  `t`, then it's useless
-    " here, since we press `zv` manually.
-    "
-    " Finally, you'll have to decide whether to use the `i` flag...
-    "
     " ---
     "
     " You could also try to use `:norm`:
     "
-    "     call feedkeys((a:count ? a:count : '')..a:command, 'n')
+    "     call feedkeys((a:count ? a:count : '')..a:command, 'in')
     "     →
     "     exe 'norm! '..(a:count ? a:count : '')..a:command
     "
