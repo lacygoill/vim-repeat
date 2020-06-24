@@ -34,7 +34,7 @@ let g:autoloaded_repeat = 1
 " It probably means that `s:repeat.tick` has not been properly updated.
 " It can happen if some command is executed without triggering any event:
 "
-"      vvv
+"      v-v
 "     :noa update
 "     " or
 "     :au CursorHold * update
@@ -44,7 +44,7 @@ let g:autoloaded_repeat = 1
 "     :update
 "     " or
 "     :au CursorHold * ++nested update
-"                      ^^^^^^^^
+"                      ^------^
 "
 " See `vim-save` for a real example where we found this pitfall.
 
@@ -57,7 +57,7 @@ let g:autoloaded_repeat = 1
 " At the end of your function, pass it as a second argument to `#set()`.
 "
 "     sil! call repeat#set("\<plug>(MyMap)", cnt)
-"                                            ^^^
+"                                            ^-^
 "
 " Explanation: If you don't pass a count to `#set()`, it will use `v:count`.
 " But if your function executes a `:norm` command, `v:count` is reset.
@@ -89,12 +89,12 @@ let g:autoloaded_repeat = 1
 "         nno <c-b> :<c-u>call Func()<cr>
 "         fu Func() abort
 "             let cnt = v:count
-"             ^^^^^^^^^^^^^^^^^
+"             ^---------------^
 "             for i in range(v:count1)
 "                 norm! 2dl
 "             endfor
 "             call repeat#set("\<c-b>", cnt)
-"                                       ^^^
+"                                       ^-^
 "         endfu
 "         sil pu!='aabbccdd'
 "     EOF
@@ -298,7 +298,7 @@ augroup repeat_plugin | au!
     "     let s:repeat = {'tick': -1, 'setreg': {'seq': '', 'name': ''}}
     "     →
     "     let s:repeat = {'tick': 0, 'setreg': {'seq': '', 'name': ''}, 'synced': v:false}
-    "                             ^                                     ^^^^^^^^^^^^^^^^^
+    "                             ^                                     ^---------------^
     "
     "     fu repeat#invalidate() abort
     "         let s:repeat.tick = -1
@@ -506,18 +506,18 @@ fu s:dot(count) abort "{{{3
     " No.  Notice how all the keys are *inserted* and not appended.
     "
     "     typeahead
-    "     ^^^^^^^^^
+    "     ^-------^
     "     whatever is currently written in the typehead
     "
     "     call feedkeys(s:repeat.set.seq, 'i')
     "     →
     "     seq typehead
-    "     ^^^
+    "     ^-^
     "
     "     call feedkeys(s:getreg()..g:getcnt(a:count), 'in')
     "     →
     "     reg cnt seq typehead
-    "     ^^^^^^^^^^^
+    "     ^---------^
     "     the order is correct (e.g. "a3dd)
     "}}}
     call feedkeys(seq, 'i')
