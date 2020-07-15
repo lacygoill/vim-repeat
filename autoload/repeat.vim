@@ -89,12 +89,12 @@ let g:autoloaded_repeat = 1
 "         nno <c-b> :<c-u>call Func()<cr>
 "         fu Func() abort
 "             let cnt = v:count
-"             ^---------------^
+"         "   ^---------------^
 "             for i in range(v:count1)
 "                 norm! 2dl
 "             endfor
 "             call repeat#set("\<c-b>", cnt)
-"                                       ^-^
+"         "                             ^-^
 "         endfu
 "         sil pu!='aabbccdd'
 "     EOF
