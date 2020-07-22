@@ -525,10 +525,11 @@ fu s:dot(count) abort "{{{3
 endfu
 
 fu s:wrap(command, count) abort "{{{3
+    " return feedkeys('u', 'in')
     let ticks_synchronized = s:repeat.tick == b:changedtick
     " Don't use the `t` flag to make Vim automatically open a possible fold.
     " During a recording, it would cause the undo/redo command to be recorded twice.
-    let seq = (a:count ? a:count : '')..a:command..(&foldopen =~# 'undo\|all' ? 'zv' : '')
+    let seq = (a:count ? a:count : '')..a:command
     call feedkeys(seq, 'in')
     " Delay the synchronization until the undo/redo command has been executed.
     " Is there an alternative?{{{
@@ -564,8 +565,20 @@ fu s:wrap(command, count) abort "{{{3
     " But it would prevent `u`, `U`, and `C-r` from printing some info about the undo state:
     " https://github.com/tpope/vim-repeat/issues/27
     "}}}
+    " Why the `foldclosed()` guard?{{{
+    "
+    " First, `zv` prevents `u`, `U`, and `C-r` from printing some info about the
+    " undo state: https://github.com/tpope/vim-repeat/issues/27
+    "
+    " Second,  if the  cursor is  not in  a closed  fold, there's  no reason  to
+    " execute `zv`.  The latter may  have other subtle undesirable side-effects;
+    " the less often we execute it, the better.
+    "}}}
     if ticks_synchronized
         au TextChanged <buffer> ++once let s:repeat.tick = b:changedtick
+            \ | if &foldopen =~# 'undo\|all' && foldclosed('.') != -1
+            \ |     call feedkeys('zv', 'in')
+            \ | endif
     endif
 endfu
 
