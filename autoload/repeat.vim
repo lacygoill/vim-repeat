@@ -231,7 +231,7 @@ augroup repeat_plugin | au!
     " Why `|| s:repeat.tick == 0`?{{{
     "
     " To handle  the case  where the  first autocmd  is triggered  several times
-    " consecutively, without the second one being triggered in-between.
+    " consecutively, without the second one being triggered in between.
     " For example, suppose you do sth which triggers these events:
     "
     "    - `BufLeave`
@@ -268,7 +268,7 @@ augroup repeat_plugin | au!
     "     " press:  C-b u
     "     :e /tmp/file2
     "     " press:  .
-    "     " result:    aabc
+    "     " result:  aabc
     "     " expected:  bac
     "
     " When `:e /tmp/file2` is run, these events are fired:
@@ -418,9 +418,9 @@ fu repeat#set(sequence, ...) abort "{{{3
         "         au CursorMoved,TextChanged * "
         "         ono <c-b> :call Textobj()<cr>
         "         fu Textobj() abort
-        "             let input = nr2char(getchar())
+        "             let input = getchar()->nr2char()
         "             call search(input)
-        "             call repeat#set(v:operator.."\<c-b>"..input)
+        "             call repeat#set(v:operator .. "\<c-b>" .. input)
         "         endfu
         "     EOF
         "     ) +"pu!=['abxy', 'abxy']" +1
@@ -496,7 +496,7 @@ fu s:dot(count) abort "{{{3
     if s:repeat.tick != b:changedtick
         " if we've pressed `3.`, we want the wrapper to run `3.`
         let cnt = a:count ? a:count : ''
-        return feedkeys(cnt..'.', 'in')
+        return feedkeys(cnt .. '.', 'in')
     endif
 
     let [seq, reg, cnt] = [s:repeat.set.seq, s:getreg(), s:getcnt(a:count)]
@@ -514,14 +514,14 @@ fu s:dot(count) abort "{{{3
     "     seq typehead
     "     ^-^
     "
-    "     call feedkeys(s:getreg()..g:getcnt(a:count), 'in')
+    "     call feedkeys(s:getreg() .. g:getcnt(a:count), 'in')
     "     →
     "     reg cnt seq typehead
     "     ^---------^
     "     the order is correct (e.g. "a3dd)
     "}}}
     call feedkeys(seq, 'i')
-    call feedkeys(reg..cnt, 'in')
+    call feedkeys(reg .. cnt, 'in')
 endfu
 
 fu s:wrap(command, count) abort "{{{3
@@ -529,7 +529,7 @@ fu s:wrap(command, count) abort "{{{3
     let ticks_synchronized = s:repeat.tick == b:changedtick
     " Don't use the `t` flag to make Vim automatically open a possible fold.
     " During a recording, it would cause the undo/redo command to be recorded twice.
-    let seq = (a:count ? a:count : '')..a:command
+    let seq = (a:count ? a:count : '') .. a:command
     call feedkeys(seq, 'in')
     " Delay the synchronization until the undo/redo command has been executed.
     " Is there an alternative?{{{
@@ -558,9 +558,9 @@ fu s:wrap(command, count) abort "{{{3
     "
     " You could also try to use `:norm`:
     "
-    "     call feedkeys((a:count ? a:count : '')..a:command, 'in')
+    "     call feedkeys((a:count ? a:count : '') .. a:command, 'in')
     "     →
-    "     exe 'norm! '..(a:count ? a:count : '')..a:command
+    "     exe 'norm! ' .. (a:count ? a:count : '') .. a:command
     "
     " But it would prevent `u`, `U`, and `C-r` from printing some info about the undo state:
     " https://github.com/tpope/vim-repeat/issues/27
@@ -627,13 +627,13 @@ fu s:getreg() abort "{{{3
         " Check that the sequences we've passed to `#set()` and `#setreg()` are identical.
         " And check that we have passed a non-empty register name to `#setreg()`.
         "}}}
-        if s:repeat.setreg.seq is# s:repeat.set.seq && s:repeat.setreg.name is# ''
-            let reg = '"'..s:repeat.setreg.name
+        if s:repeat.setreg.seq is# s:repeat.set.seq && s:repeat.setreg.name == ''
+            let reg = '"' .. s:repeat.setreg.name
         endif
     " `.` *was* prefixed by a register; use it
     " See: https://github.com/tpope/vim-repeat/commit/0b9b5e742f67bc81ae4a1f79318549d3afc90b13
     else
-        let reg = '"'..v:register
+        let reg = '"' .. v:register
     endif
 
     if reg is# '"='
@@ -642,7 +642,7 @@ fu s:getreg() abort "{{{3
         " We don't want to re-use the  last evaluation; we want to *re*-evaluate
         " the expression itself.
         "}}}
-        let reg = '"='..getreg('=', 1).."\r"
+        let reg = '"=' .. getreg('=', 1) .. "\r"
     endif
 
     return reg
