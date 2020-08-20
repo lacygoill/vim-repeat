@@ -399,8 +399,8 @@ fu repeat#set(sequence, ...) abort "{{{3
         " It works because the latter is not fired in operator-pending mode.
         " From `:h CursorMoved`:
         "
-        " >     Not triggered when there is typeahead or when
-        " >     an operator is pending.
+        "    > Not triggered when there is typeahead or when
+        "    > an operator is pending.
         "
         " See: https://github.com/tpope/vim-repeat/issues/8#issuecomment-13951082
         "}}}
