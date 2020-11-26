@@ -67,7 +67,7 @@ let g:autoloaded_repeat = 1
 "     $ vim -Nu NONE -S <(cat <<'EOF'
 "         set rtp^=~/.vim/plugged/vim-repeat
 "         au CursorMoved,TextChanged * "
-"         nno <c-b> :<c-u>call Func()<cr>
+"         nno <c-b> <cmd>call Func()<cr>
 "         fu Func() abort
 "             for i in range(v:count1)
 "                 norm! 2dl
@@ -86,7 +86,7 @@ let g:autoloaded_repeat = 1
 "     $ vim -Nu NONE -S <(cat <<'EOF'
 "         set rtp^=~/.vim/plugged/vim-repeat
 "         au CursorMoved,TextChanged * "
-"         nno <c-b> :<c-u>call Func()<cr>
+"         nno <c-b> <cmd>call Func()<cr>
 "         fu Func() abort
 "             let cnt = v:count
 "         "   ^---------------^
@@ -109,7 +109,7 @@ let g:autoloaded_repeat = 1
 "     $ vim -Nu NONE -S <(cat <<'EOF'
 "         set rtp^=~/.vim/plugged/vim-repeat
 "         au CursorMoved,TextChanged * "
-"         nno <c-b> xp:call repeat#set("\<lt>c-b>")<cr>
+"         nno <c-b> xp<cmd>call repeat#set("\<lt>c-b>")<cr>
 "         %d
 "         pu!='abc'
 "         set cpo+=y
@@ -210,7 +210,7 @@ augroup repeat_plugin | au!
     "     $ vim -Nu NONE -S <(cat <<'EOF'
     "         set rtp^=~/.vim/plugged/vim-repeat
     "         au CursorMoved,TextChanged * "
-    "         nno <c-b> xp:call repeat#set("\<lt>c-b>")<cr>
+    "         nno <c-b> xp<cmd>call repeat#set("\<lt>c-b>")<cr>
     "         %d
     "         pu!='abc'
     "     EOF
@@ -259,7 +259,7 @@ augroup repeat_plugin | au!
     "     $ vim -Nu NONE -S <(cat <<'EOF'
     "         set rtp^=~/.vim/plugged/vim-repeat
     "         au CursorMoved,TextChanged * "
-    "         nno <c-b> xp:call repeat#set("\<lt>c-b>")<cr>
+    "         nno <c-b> xp<cmd>call repeat#set("\<lt>c-b>")<cr>
     "         call writefile(['abc'], '/tmp/file1')
     "         call writefile(['abc'], '/tmp/file2')
     "         e /tmp/file1
@@ -332,7 +332,7 @@ augroup END
 "
 " It works because `v:count` is 0 when no explicit count was pressed.
 "}}}
-nno <silent><unique> . :<c-u>call <sid>dot(v:count)<cr>
+nno <unique> . <cmd>call <sid>dot(v:count)<cr>
 
 " Why remapping `u`, `U` and `C-r`?{{{
 "
@@ -341,10 +341,10 @@ nno <silent><unique> . :<c-u>call <sid>dot(v:count)<cr>
 " the same  command; for  vim-repeat's `.`  to behave just  like Vim's  `.`, the
 " ticks synchronization need to be preserved whenever `u` or `C-r` is executed.
 "}}}
-nno <silent><unique> u :<c-u>call <sid>wrap('u', v:count)<cr>
-nno <silent><unique> <c-r> :<c-u>call <sid>wrap("\<lt>c-r>", v:count)<cr>
+nno <unique> u <cmd>call <sid>wrap('u', v:count)<cr>
+nno <unique> <c-r> <cmd>call <sid>wrap("\<lt>c-r>", v:count)<cr>
 if maparg('U') == ''
-    nno <silent><unique> U :<c-u>call <sid>wrap('U', v:count)<cr>
+    nno <unique> U <cmd>call <sid>wrap('U', v:count)<cr>
 endif
 
 " Functions {{{1
@@ -416,7 +416,7 @@ fu repeat#set(sequence, ...) abort "{{{3
         "     $ vim -Nu NONE -S <(cat <<'EOF'
         "         set rtp^=~/.vim/plugged/vim-repeat
         "         au CursorMoved,TextChanged * "
-        "         ono <c-b> :call Textobj()<cr>
+        "         ono <c-b> <cmd>call Textobj()<cr>
         "         fu Textobj() abort
         "             let input = getchar()->nr2char()
         "             call search(input)
