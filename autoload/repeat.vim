@@ -109,7 +109,7 @@ let g:autoloaded_repeat = 1
 "     $ vim -Nu NONE -S <(cat <<'EOF'
 "         set rtp^=~/.vim/plugged/vim-repeat
 "         au CursorMoved,TextChanged * "
-"         nno <c-b> xp<cmd>call repeat#set("\<lt>c-b>")<cr>
+"         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
 "         %d
 "         pu!='abc'
 "         set cpo+=y
@@ -210,7 +210,7 @@ augroup repeat_plugin | au!
     "     $ vim -Nu NONE -S <(cat <<'EOF'
     "         set rtp^=~/.vim/plugged/vim-repeat
     "         au CursorMoved,TextChanged * "
-    "         nno <c-b> xp<cmd>call repeat#set("\<lt>c-b>")<cr>
+    "         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
     "         %d
     "         pu!='abc'
     "     EOF
@@ -259,7 +259,7 @@ augroup repeat_plugin | au!
     "     $ vim -Nu NONE -S <(cat <<'EOF'
     "         set rtp^=~/.vim/plugged/vim-repeat
     "         au CursorMoved,TextChanged * "
-    "         nno <c-b> xp<cmd>call repeat#set("\<lt>c-b>")<cr>
+    "         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
     "         call writefile(['abc'], '/tmp/file1')
     "         call writefile(['abc'], '/tmp/file2')
     "         e /tmp/file1
@@ -342,7 +342,7 @@ nno <unique> . <cmd>call <sid>dot(v:count)<cr>
 " ticks synchronization need to be preserved whenever `u` or `C-r` is executed.
 "}}}
 nno <unique> u <cmd>call <sid>wrap('u', v:count)<cr>
-nno <unique> <c-r> <cmd>call <sid>wrap("\<lt>c-r>", v:count)<cr>
+nno <unique> <c-r> <cmd>call <sid>wrap('<c-r>', v:count)<cr>
 if maparg('U') == ''
     nno <unique> U <cmd>call <sid>wrap('U', v:count)<cr>
 endif
@@ -380,7 +380,7 @@ fu repeat#set(sequence, ...) abort "{{{3
         " fully executed:
         "
         "     $ vim -Nu NONE -S <(cat <<'EOF'
-        "         omap <c-b> :call Func()<cr>
+        "         omap <c-b> <cmd>call Func()<cr>
         "         fu Func()
         "             norm! l
         "             echom b:changedtick
@@ -512,7 +512,7 @@ fu s:dot(count) abort "{{{3
     "     call feedkeys(s:repeat.set.seq, 'i')
     "     →
     "     seq typehead
-    "     ^-^
+    "     ^^^
     "
     "     call feedkeys(s:getreg() .. g:getcnt(a:count), 'in')
     "     →
