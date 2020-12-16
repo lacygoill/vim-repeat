@@ -148,7 +148,7 @@ endif
 
 " Autocmd {{{1
 
-augroup repeat_plugin | au!
+augroup RepeatPlugin | au!
     " Purpose: Make sure the ticks are still synchronized whenever we read/write/reload a buffer,{{{
     " or when we focus a different buffer.
     "
@@ -359,7 +359,7 @@ fu repeat#set(sequence, ...) abort "{{{3
     "     ~/.vim/plugged/vim-matchup/autoload/matchup/surround.vim:69
     "}}}
     let g:repeat_sequence = a:sequence
-    augroup repeat_custom_motion | au!
+    augroup RepeatCustomMotion | au!
         " Should it be `au! * <buffer>`?{{{
         "
         " In theory yes, but I don't think  it matters here; I don't see how the
@@ -479,8 +479,8 @@ fu repeat#invalidate() abort "{{{3
     "
     " See: https://github.com/tpope/vim-repeat/commit/80261bc53193c7e602373c6da78180aabbeb4b77
     "}}}
-    if exists('#repeat_custom_motion')
-        au! repeat_custom_motion
+    if exists('#RepeatCustomMotion')
+        au! RepeatCustomMotion
     endif
     return ''
 endfu
