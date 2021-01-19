@@ -296,8 +296,8 @@ augroup RepeatPlugin | au!
     #
     #     repeat: dict<any> = {tick: -1, setreg: {seq: '', name: ''}}
     #     →
-    #     repeat: dict<any>= {'tick': 0, setreg: {seq: '', name: ''}, synced: false}
-    #                                 ^                               ^-----------^
+    #     repeat: dict<any>= {tick: 0, setreg: {seq: '', name: ''}, synced: false}
+    #                               ^                               ^-----------^
     #
     #     def repeat#invalidate()
     #         repeat.tick = -1
