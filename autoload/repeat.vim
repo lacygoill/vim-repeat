@@ -438,7 +438,7 @@ def repeat#set(sequence: string, count = 0) #{{{3
     augroup END
 enddef
 
-def repeat#setreg(seq: string, name: stgring) #{{{3
+def repeat#setreg(seq: string, name: string) #{{{3
     repeat.setreg = {seq: seq, name: name}
 enddef
 
@@ -578,7 +578,7 @@ def Wrap(command: string, count: number) #{{{3
     #}}}
     if ticks_synchronized
         au TextChanged <buffer> ++once repeat.tick = b:changedtick
-            | if &foldopen =~ 'undo\|all' && foldclosed('.') != -1
+            | if &foldopen =~ 'undo\|all' && foldclosed('.') >= 0
             |     feedkeys('zv', 'in')
             | endif
     endif
