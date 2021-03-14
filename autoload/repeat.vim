@@ -34,7 +34,7 @@ var loaded = true
 # It probably means that `repeat.tick` has not been properly updated.
 # It can happen if some command is executed without triggering any event:
 #
-#      v-v
+#      vvv
 #     :noa update
 #     " or
 #     :au CursorHold * update
