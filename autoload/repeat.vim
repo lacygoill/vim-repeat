@@ -65,7 +65,7 @@ var loaded = true
 #
 #     ✘
 #     $ vim -Nu NONE -S <(cat <<'EOF'
-#         set rtp^=~/.vim/plugged/vim-repeat
+#         set rtp^=~/.vim/pack/mine/opt/repeat
 #         au CursorMoved,TextChanged * "
 #         nno <c-b> <cmd>call Func()<cr>
 #         fu Func() abort
@@ -84,7 +84,7 @@ var loaded = true
 #
 #     ✔
 #     $ vim -Nu NONE -S <(cat <<'EOF'
-#         set rtp^=~/.vim/plugged/vim-repeat
+#         set rtp^=~/.vim/pack/mine/opt/repeat
 #         au CursorMoved,TextChanged * "
 #         nno <c-b> <cmd>call Func()<cr>
 #         fu Func() abort
@@ -107,7 +107,7 @@ var loaded = true
 # I have `set cpo+=y`, and my last command is `yy`.  `.` does not repeat it!  Instead, it repeats an older command! {{{2
 #
 #     $ vim -Nu NONE -S <(cat <<'EOF'
-#         set rtp^=~/.vim/plugged/vim-repeat
+#         set rtp^=~/.vim/pack/mine/opt/repeat
 #         au CursorMoved,TextChanged * "
 #         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
 #         %d
@@ -156,41 +156,6 @@ augroup RepeatPlugin | au!
     # last custom command which has invoked `#set()`.
     #}}}
 
-    # Wait.  `repeat.tick` is supposed to save `b:changedtick`.  Why do you reset it to 0 or -1?{{{
-    #
-    # Between a  `BufLeave`, `BufWritePre`,  `BufUnReadPre` event, and  the next
-    # `BufEnter`,  `BufWritePost` event,  we  use `repeat.tick`  as a  temporary
-    # boolean flag:
-    #
-    #      value | meaning
-    #      ---------------
-    #          0 | v:true
-    #         -1 | v:false
-    #}}}
-    #   How can you do that?  Doesn't that make you lose the original value saved in `repeat.tick`?{{{
-    #
-    # Yes, but it doesn't matter; you don't need to remember it.
-    #
-    # If the ticks were synchronized, then `repeat.tick` is temporarily reset to
-    # 0, and the ticks will be re-synchronized on `BufEnter` or `BufWritePost`.
-    #
-    # If the  ticks were *not*  synchronized, then `repeat.tick`  is temporarily
-    # reset to -1, and nothing will happen on `BufEnter` or `BufWritePost`.
-    # In  the  end, `repeat.tick`  will  have  been  definitively reset  to  -1,
-    # which  is  a  good value,  because  no  matter  what's  the new  value  of
-    # `b:changedtick`, it  can't be -1, so  the state of the  synchronization is
-    # preserved (i.e. the ticks are still *un*equal).
-    # In contrast, if  `repeat.tick` was not reset to -1,  and kept its original
-    # value (e.g. 123),  there would be a  risk that it's accidentally  equal to
-    # the  new `b:changedtick`,  which  would cause  `Dot()`  to wrongly  repeat
-    # `repeat.set.seq`.
-    #}}}
-    #   Why 0 and -1?  Why not 0 and 1?{{{
-    #
-    # 1 is a valid value for `b:changedtick`.
-    # To avoid any confusion, we want *invalid* values.
-    #}}}
-
     # Why `BufReadPre`?{{{
     #
     # Tpope listens to it.  I have no idea why though.
@@ -207,7 +172,7 @@ augroup RepeatPlugin | au!
     #
     #     # remove `BufUnload`
     #     $ vim -Nu NONE -S <(cat <<'EOF'
-    #         set rtp^=~/.vim/plugged/vim-repeat
+    #         set rtp^=~/.vim/pack/mine/opt/repeat
     #         au CursorMoved,TextChanged * "
     #         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
     #         %d
@@ -227,62 +192,13 @@ augroup RepeatPlugin | au!
     # Note  that  `b:changedtick`  is  incremented by  1  on  `BufReadPre`  when
     # reloading a buffer, which is why the latter event is can't help here.
     #}}}
-    # Why `|| repeat.tick == 0`?{{{
-    #
-    # To handle  the case  where the  first autocmd  is triggered  several times
-    # consecutively, without the second one being triggered in between.
-    # For example, suppose you do sth which triggers these events:
-    #
-    #    - `BufLeave`
-    #    - `BufReadPre`
-    #    - `BufEnter`
-    #
-    # After  `BufLeave`  has  been  fired,   the  meaning  of  `repeat.tick`  is
-    # different;  it's no  longer a  saved `b:changedtick`,  but a  boolean flag
-    # which stands for the state of the synchronization:
-    #
-    #      0 = ticks synchronized
-    #     -1 = ticks *not* synchronized
-    #
-    # As a  result, when `BufReadPre`  is fired, `repeat.tick  == b:changedtick`
-    # will *always* be false.  Obviously, this is wrong; it should be false only
-    # if the ticks were not synchronized on `BufLeave`.
-    # `||  repeat.tick ==  0`  makes sure  that  if the  boolean  flag was  true
-    # (i.e. 0) on `BufLeave`, it is still true on `BufReadPre`.
-    #
-    # ---
-    #
-    # Here is an example illustrating the issue:
-    #
-    #     # remove `|| repeat.tick == 0`
-    #     $ vim -Nu NONE -S <(cat <<'EOF'
-    #         set rtp^=~/.vim/plugged/vim-repeat
-    #         au CursorMoved,TextChanged * "
-    #         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
-    #         call writefile(['abc'], '/tmp/file1')
-    #         call writefile(['abc'], '/tmp/file2')
-    #         e /tmp/file1
-    #     EOF
-    #     )
-    #     " press:  C-b u
-    #     :e /tmp/file2
-    #     " press:  .
-    #     " result:  aabc
-    #     " expected:  bac
-    #
-    # When `:e /tmp/file2` is run, these events are fired:
-    #
-    #    - `BufLeave`
-    #    - `BufUnload`
-    #    - `BufEnter`
-    #}}}
 
     # Which alternative could I use to avoid `repeat.tick` from having a temporary different meaning?{{{
     #
     # I guess you could use an extra variable (e.g. `repeat.synced`):
     #
     #     au BufLeave,BufWritePre,BufReadPre,BufUnload *
-    #        \ repeat.synced = repeat.tick == b:changedtick || repeat.synced
+    #        \ repeat.synced = repeat.tick == getbufvar(expand('<abuf>')->str2nr(), 'changedtick') || repeat.synced
     #
     #     au BufEnter,BufWritePost *
     #          if repeat.synced
@@ -310,11 +226,111 @@ augroup RepeatPlugin | au!
     # It  makes the  code a  little more  verbose, and  I'm not  100% sure  it's
     # equivalent to tpope's code.
     #}}}
-    au BufLeave,BufWritePre,BufReadPre,BufUnload *
-        \ repeat.tick = (repeat.tick == b:changedtick || repeat.tick == 0) ? 0 : -1
-    au BufEnter,BufWritePost *
-        \ if repeat.tick == 0 | repeat.tick = b:changedtick | endif
+    au BufLeave,BufWritePre,BufReadPre,BufUnload * KeepTicksSynchronized()
+    au BufEnter,BufWritePost * KeepTicksSynchronized(true)
 augroup END
+
+def KeepTicksSynchronized(on_Enter_or_WritePost = false)
+    if on_Enter_or_WritePost
+        if repeat.tick == 0
+            repeat.tick = b:changedtick
+        endif
+    else
+        # on `BufUnload`, the buffer being  unloaded might be different than the
+        # current buffer; so, `b:changedtick` would be wrong here
+        var buf: number = expand('<abuf>')->str2nr()
+        # Wait.  `repeat.tick` is supposed to save `b:changedtick`.  Why do you reset it to 0 or -1?{{{
+        #
+        # Between  a `BufLeave`,  `BufWritePre`, `BufUnReadPre`  event, and  the
+        # next  `BufEnter`,  `BufWritePost` event,  we  use  `repeat.tick` as  a
+        # temporary boolean flag:
+        #
+        #      value | meaning
+        #      ---------------
+        #          0 | v:true
+        #         -1 | v:false
+        #}}}
+        #   How can you do that?  Doesn't that make you lose the original value saved in `repeat.tick`?{{{
+        #
+        # Yes, but it doesn't matter; you don't need to remember it.
+        #
+        # If  the ticks  were  synchronized, then  `repeat.tick` is  temporarily
+        # reset to  0, and the  ticks will  be re-synchronized on  `BufEnter` or
+        # `BufWritePost`.
+        #
+        # If  the   ticks  were   *not*  synchronized,  then   `repeat.tick`  is
+        # temporarily  reset to  -1, and  nothing will  happen on  `BufEnter` or
+        # `BufWritePost`.
+        # In the  end, `repeat.tick`  will have been  definitively reset  to -1,
+        # which  is a  good value,  because no  matter what's  the new  value of
+        # `b:changedtick`, it can't  be -1, so the state  of the synchronization
+        # is preserved (i.e. the ticks are still *un*equal).
+        # In  contrast,  if  `repeat.tick`  was   not  reset  to  -1,  and  kept
+        # its  original  value (e.g. 123),  there  would  be  a risk  that  it's
+        # accidentally  equal  to the  new  `b:changedtick`,  which would  cause
+        # `Dot()` to wrongly repeat `repeat.set.seq`.
+        #}}}
+        #   Why 0 and -1?  Why not 0 and 1?{{{
+        #
+        # 1 is a valid value for `b:changedtick`.
+        # To avoid any confusion, we want *invalid* values.
+        #}}}
+
+        # Why `|| repeat.tick == 0`?{{{
+        #
+        # To handle the case where the  first autocmd is triggered several times
+        # consecutively, without the second one being triggered in between.
+        # For example, suppose you do sth which triggers these events:
+        #
+        #    - `BufLeave`
+        #    - `BufReadPre`
+        #    - `BufEnter`
+        #
+        # After  `BufLeave` has  been  fired, the  meaning  of `repeat.tick`  is
+        # different; it's no longer a  saved `b:changedtick`, but a boolean flag
+        # which stands for the state of the synchronization:
+        #
+        #      0 = ticks synchronized
+        #     -1 = ticks *not* synchronized
+        #
+        # As a result, when `BufReadPre` is fired, this will *always* be false:
+        #
+        #     repeat.tick == b:changedtick
+        #
+        # Obviously, this  is wrong; it should  be false only if  the ticks were
+        # not synchronized on `BufLeave`.
+        # `|| repeat.tick  == 0` makes  sure that if  the boolean flag  was true
+        # (i.e. 0) on `BufLeave`, it is still true on `BufReadPre`.
+        #
+        # ---
+        #
+        # Here is an example illustrating the issue:
+        #
+        #     # remove `|| repeat.tick == 0`
+        #     $ vim -Nu NONE -S <(cat <<'EOF'
+        #         set rtp^=~/.vim/pack/mine/opt/repeat
+        #         au CursorMoved,TextChanged * "
+        #         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
+        #         call writefile(['abc'], '/tmp/file1')
+        #         call writefile(['abc'], '/tmp/file2')
+        #         e /tmp/file1
+        #     EOF
+        #     )
+        #     " press:  C-b u
+        #     :e /tmp/file2
+        #     " press:  .
+        #     " result:  aabc
+        #     " expected:  bac
+        #
+        # When `:e /tmp/file2` is run, these events are fired:
+        #
+        #    - `BufLeave`
+        #    - `BufUnload`
+        #    - `BufEnter`
+        #}}}
+        repeat.tick = (repeat.tick == getbufvar(buf, 'changedtick') || repeat.tick == 0) ? 0 : -1
+    endif
+enddef
 
 # Mappings {{{1
 
@@ -355,7 +371,7 @@ def repeat#set(sequence: string, count = 0) #{{{3
     #
     # That's the case – for example – of `vim-matchup`:
     #
-    #     ~/.vim/plugged/vim-matchup/autoload/matchup/surround.vim:69
+    #     vim-matchup/autoload/matchup/surround.vim:69
     #}}}
     g:repeat_sequence = sequence
     augroup RepeatCustomMotion | au!
@@ -413,7 +429,7 @@ def repeat#set(sequence: string, count = 0) #{{{3
         # However, it *is* needed for `vim-sneak` (to repeat sth like `dfx`):
         #
         #     $ vim -Nu NONE -S <(cat <<'EOF'
-        #         set rtp^=~/.vim/plugged/vim-repeat
+        #         set rtp^=~/.vim/pack/mine/opt/repeat
         #         au CursorMoved,TextChanged * "
         #         ono <c-b> <cmd>call Textobj()<cr>
         #         fu Textobj() abort
