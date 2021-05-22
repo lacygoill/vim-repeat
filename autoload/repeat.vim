@@ -406,8 +406,8 @@ def repeat#set(sequence: string, count = 0) #{{{3
         #     " press: d C-b
         #     :echom b:changedtick
         #     :mess
-        #     3~
-        #     4~
+        #     3˜
+        #     4˜
         #
         # Because  of this,  synchronizing the  ticks right  now is  useless; it
         # needs to be done later, e.g. on `CursorMoved`.
