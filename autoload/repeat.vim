@@ -57,7 +57,7 @@ var loaded = true
 # At the end of your function, pass it as a second argument to `#set()`.
 #
 #     sil! call repeat#set("\<plug>(MyMap)", cnt)
-#                                            ^-^
+#                                            ^^^
 #
 # Explanation: If you don't pass a count to `#set()`, it will use `v:count`.
 # But if your function executes a `:norm` command, `v:count` is reset.
@@ -65,7 +65,7 @@ var loaded = true
 #
 #     ✘
 #     $ vim -Nu NONE -S <(cat <<'EOF'
-#         set rtp^=~/.vim/pack/mine/opt/repeat
+#         set runtimepath^=~/.vim/pack/mine/opt/repeat
 #         au CursorMoved,TextChanged * "
 #         nno <c-b> <cmd>call Func()<cr>
 #         fu Func() abort
@@ -84,7 +84,7 @@ var loaded = true
 #
 #     ✔
 #     $ vim -Nu NONE -S <(cat <<'EOF'
-#         set rtp^=~/.vim/pack/mine/opt/repeat
+#         set runtimepath^=~/.vim/pack/mine/opt/repeat
 #         au CursorMoved,TextChanged * "
 #         nno <c-b> <cmd>call Func()<cr>
 #         fu Func() abort
@@ -94,7 +94,7 @@ var loaded = true
 #                 norm! 2dl
 #             endfor
 #             call repeat#set("\<c-b>", cnt)
-#         "                             ^-^
+#         "                             ^^^
 #         endfu
 #         sil pu!='aabbccdd'
 #     EOF
@@ -104,15 +104,15 @@ var loaded = true
 #     " result:    dot deletes 2 characters
 #     " expected:  dot deletes 2 characters
 
-# I have `set cpo+=y`, and my last command is `yy`.  `.` does not repeat it!  Instead, it repeats an older command! {{{2
+# I have `set cpoptions+=y`, and my last command is `yy`.  `.` does not repeat it!  Instead, it repeats an older command! {{{2
 #
 #     $ vim -Nu NONE -S <(cat <<'EOF'
-#         set rtp^=~/.vim/pack/mine/opt/repeat
+#         set runtimepath^=~/.vim/pack/mine/opt/repeat
 #         au CursorMoved,TextChanged * "
 #         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
 #         %d
 #         pu!='abc'
-#         set cpo+=y
+#         set cpoptions+=y
 #     EOF
 #     )
 #     " press:  C-b
@@ -172,7 +172,7 @@ augroup RepeatPlugin | au!
     #
     #     # remove `BufUnload`
     #     $ vim -Nu NONE -S <(cat <<'EOF'
-    #         set rtp^=~/.vim/pack/mine/opt/repeat
+    #         set runtimepath^=~/.vim/pack/mine/opt/repeat
     #         au CursorMoved,TextChanged * "
     #         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
     #         %d
@@ -308,7 +308,7 @@ def KeepTicksSynchronized(on_Enter_or_WritePost = false)
         #
         #     # remove `|| repeat.tick == 0`
         #     $ vim -Nu NONE -S <(cat <<'EOF'
-        #         set rtp^=~/.vim/pack/mine/opt/repeat
+        #         set runtimepath^=~/.vim/pack/mine/opt/repeat
         #         au CursorMoved,TextChanged * "
         #         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
         #         call writefile(['abc'], '/tmp/file1')
@@ -429,11 +429,11 @@ def repeat#set(sequence: string, count = 0) #{{{3
         # However, it *is* needed for `vim-sneak` (to repeat sth like `dfx`):
         #
         #     $ vim -Nu NONE -S <(cat <<'EOF'
-        #         set rtp^=~/.vim/pack/mine/opt/repeat
+        #         set runtimepath^=~/.vim/pack/mine/opt/repeat
         #         au CursorMoved,TextChanged * "
         #         ono <c-b> <cmd>call Textobj()<cr>
         #         fu Textobj() abort
-        #             let input = getchar()->nr2char()
+        #             let input = getcharstr()
         #             call search(input)
         #             call repeat#set(v:operator .. "\<c-b>" .. input)
         #         endfu
@@ -607,7 +607,7 @@ def Getcnt(dotcount: number): string #{{{3
     # We want it to  have priority over whatever count was  saved by `#set()` so
     # that our wrapper around `.` emulates the behavior of the native `.`:
     #
-    #     $ vim -Nu NONE +"sil pu!=range(1, 10)|1"
+    #     $ vim -Nu NONE +"sil pu! =range(1, 10) | 1"
     #     " press:  2dd
     #               3.
     #
@@ -621,7 +621,7 @@ def Getcnt(dotcount: number): string #{{{3
     #
     # So that our wrapper around `.` emulates the native `.`:
     #
-    #     $ vim -Nu NONE +"sil pu!=range(1, 10)|1"
+    #     $ vim -Nu NONE +"sil pu! =range(1, 10) | 1"
     #     " press:  2dd
     #               .
     #
