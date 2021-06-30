@@ -7,7 +7,7 @@ var loaded = true
 #
 # Basic usage is as follows:
 #
-#     sil! call repeat#set("\<plug>(my_map)", 3)
+#     silent! call repeat#set("\<Plug>(my_map)", 3)
 #
 # The first  argument is the mapping  that will be  invoked when the `.`  key is
 # pressed.
@@ -26,7 +26,7 @@ var loaded = true
 #     let regname = v:register
 #     ...
 #     " after all your other commands
-#     sil! call repeat#setreg("\<plug>(my_map)", regname)
+#     silent! call repeat#setreg("\<Plug>(my_map)", regname)
 
 # FAQ {{{1
 # `.` does not repeat my last *custom* command! {{{2
@@ -34,17 +34,17 @@ var loaded = true
 # It probably means that `repeat.tick` has not been properly updated.
 # It can happen if some command is executed without triggering any event:
 #
-#      vvv
-#     :noa update
+#      v-------v
+#     :noautocmd update
 #     " or
-#     :au CursorHold * update
+#     :autocmd CursorHold * update
 #
 # Make sure they do trigger events:
 #
 #     :update
 #     " or
-#     :au CursorHold * ++nested update
-#                      ^------^
+#     :autocmd CursorHold * ++nested update
+#                           ^------^
 #
 # See `vim-save` for a real example where we found this pitfall.
 
@@ -56,25 +56,25 @@ var loaded = true
 #
 # At the end of your function, pass it as a second argument to `#set()`.
 #
-#     sil! call repeat#set("\<plug>(MyMap)", cnt)
-#                                            ^^^
+#     silent! call repeat#set("\<Plug>(MyMap)", cnt)
+#                                               ^^^
 #
 # Explanation: If you don't pass a count to `#set()`, it will use `v:count`.
-# But if your function executes a `:norm` command, `v:count` is reset.
+# But if your function executes a `:normal` command, `v:count` is reset.
 # You don't want `#set()` to save this modified `v:count`; you want the original one.
 #
 #     ✘
 #     $ vim -Nu NONE -S <(cat <<'EOF'
 #         set runtimepath^=~/.vim/pack/mine/opt/repeat
-#         au CursorMoved,TextChanged * "
-#         nno <c-b> <cmd>call Func()<cr>
-#         fu Func() abort
+#         autocmd CursorMoved,TextChanged * "
+#         nnoremap <C-B> <Cmd>call Func()<CR>
+#         function Func() abort
 #             for i in range(v:count1)
-#                 norm! 2dl
+#                 normal! 2dl
 #             endfor
-#             call repeat#set("\<c-b>")
-#         endfu
-#         sil pu!='aabbccdd'
+#             call repeat#set("\<C-B>")
+#         endfunction
+#         silent put! ='aabbccdd'
 #     EOF
 #     )
 #     " press:  C-b
@@ -85,18 +85,18 @@ var loaded = true
 #     ✔
 #     $ vim -Nu NONE -S <(cat <<'EOF'
 #         set runtimepath^=~/.vim/pack/mine/opt/repeat
-#         au CursorMoved,TextChanged * "
-#         nno <c-b> <cmd>call Func()<cr>
-#         fu Func() abort
+#         autocmd CursorMoved,TextChanged * "
+#         nnoremap <C-B> <Cmd>call Func()<CR>
+#         function Func() abort
 #             let cnt = v:count
 #         "   ^---------------^
 #             for i in range(v:count1)
-#                 norm! 2dl
+#                 normal! 2dl
 #             endfor
-#             call repeat#set("\<c-b>", cnt)
+#             call repeat#set("\<C-B>", cnt)
 #         "                             ^^^
-#         endfu
-#         sil pu!='aabbccdd'
+#         endfunction
+#         silent put! ='aabbccdd'
 #     EOF
 #     )
 #     " press:  C-b
@@ -108,10 +108,10 @@ var loaded = true
 #
 #     $ vim -Nu NONE -S <(cat <<'EOF'
 #         set runtimepath^=~/.vim/pack/mine/opt/repeat
-#         au CursorMoved,TextChanged * "
-#         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
-#         %d
-#         pu!='abc'
+#         autocmd CursorMoved,TextChanged * "
+#         nnoremap <C-B> xp<Cmd>call repeat#set('<C-B>')<CR>
+#         :% delete
+#         put! ='abc'
 #         set cpoptions+=y
 #     EOF
 #     )
@@ -148,7 +148,7 @@ endif
 
 # Autocmd {{{1
 
-augroup RepeatPlugin | au!
+augroup RepeatPlugin | autocmd!
     # Purpose: Make sure the ticks are still synchronized whenever we read/write/reload a buffer,{{{
     # or when we focus a different buffer.
     #
@@ -173,16 +173,16 @@ augroup RepeatPlugin | au!
     #     # remove `BufUnload`
     #     $ vim -Nu NONE -S <(cat <<'EOF'
     #         set runtimepath^=~/.vim/pack/mine/opt/repeat
-    #         au CursorMoved,TextChanged * "
-    #         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
-    #         %d
-    #         pu!='abc'
+    #         autocmd CursorMoved,TextChanged * "
+    #         nnoremap <C-B> xp<Cmd>call repeat#set('<C-B>')<CR>
+    #         :% delete
+    #         put! ='abc'
     #     EOF
     #     ) /tmp/file
     #     " press:  C-b
-    #               :w
+    #               :write
     #               h (necessary to prevent the `CursorMoved` autocmd from fixing the bug by accident)
-    #               :e
+    #               :edit
     #               .
     #     " result:   baac
     #     " expected: abc
@@ -197,10 +197,10 @@ augroup RepeatPlugin | au!
     #
     # I guess you could use an extra variable (e.g. `repeat.synced`):
     #
-    #     au BufLeave,BufWritePre,BufReadPre,BufUnload *
+    #     autocmd BufLeave,BufWritePre,BufReadPre,BufUnload *
     #        \ repeat.synced = repeat.tick == getbufvar(expand('<abuf>')->str2nr(), 'changedtick') || repeat.synced
     #
-    #     au BufEnter,BufWritePost *
+    #     autocmd BufEnter,BufWritePost *
     #          if repeat.synced
     #        |     repeat.tick = b:changedtick
     #        | else
@@ -226,8 +226,8 @@ augroup RepeatPlugin | au!
     # It  makes the  code a  little more  verbose, and  I'm not  100% sure  it's
     # equivalent to tpope's code.
     #}}}
-    au BufLeave,BufWritePre,BufReadPre,BufUnload * KeepTicksSynchronized()
-    au BufEnter,BufWritePost * KeepTicksSynchronized(true)
+    autocmd BufLeave,BufWritePre,BufReadPre,BufUnload * KeepTicksSynchronized()
+    autocmd BufEnter,BufWritePost * KeepTicksSynchronized(true)
 augroup END
 
 def KeepTicksSynchronized(on_Enter_or_WritePost = false)
@@ -309,20 +309,20 @@ def KeepTicksSynchronized(on_Enter_or_WritePost = false)
         #     # remove `|| repeat.tick == 0`
         #     $ vim -Nu NONE -S <(cat <<'EOF'
         #         set runtimepath^=~/.vim/pack/mine/opt/repeat
-        #         au CursorMoved,TextChanged * "
-        #         nno <c-b> xp<cmd>call repeat#set('<c-b>')<cr>
+        #         autocmd CursorMoved,TextChanged * "
+        #         nnoremap <C-B> xp<Cmd>call repeat#set('<C-B>')<CR>
         #         call writefile(['abc'], '/tmp/file1')
         #         call writefile(['abc'], '/tmp/file2')
-        #         e /tmp/file1
+        #         edit /tmp/file1
         #     EOF
         #     )
         #     " press:  C-b u
-        #     :e /tmp/file2
+        #     :edit /tmp/file2
         #     " press:  .
         #     " result:  aabc
         #     " expected:  bac
         #
-        # When `:e /tmp/file2` is run, these events are fired:
+        # When `:edit /tmp/file2` is run, these events are fired:
         #
         #    - `BufLeave`
         #    - `BufUnload`
@@ -347,7 +347,7 @@ enddef
 #
 # It works because `v:count` is 0 when no explicit count was pressed.
 #}}}
-nno <unique> . <cmd>call <sid>Dot(v:count)<cr>
+nnoremap <unique> . <Cmd>call <SID>Dot(v:count)<CR>
 
 # Why remapping `u`, `U` and `C-r`?{{{
 #
@@ -356,10 +356,10 @@ nno <unique> . <cmd>call <sid>Dot(v:count)<cr>
 # the same  command; for  vim-repeat's `.`  to behave just  like Vim's  `.`, the
 # ticks synchronization need to be preserved whenever `u` or `C-r` is executed.
 #}}}
-nno <unique> u <cmd>call <sid>Wrap('u', v:count)<cr>
-nno <unique> <c-r> <cmd>call <sid>Wrap('<c-r>', v:count)<cr>
+nnoremap <unique> u <Cmd>call <SID>Wrap('u', v:count)<CR>
+nnoremap <unique> <C-R> <Cmd>call <SID>Wrap('<C-R>', v:count)<CR>
 if maparg('U') == ''
-    nno <unique> U <cmd>call <sid>Wrap('U', v:count)<cr>
+    nnoremap <unique> U <Cmd>call <SID>Wrap('U', v:count)<CR>
 endif
 
 # Functions {{{1
@@ -374,8 +374,8 @@ def repeat#set(sequence: string, count = 0) #{{{3
     #     vim-matchup/autoload/matchup/surround.vim:69
     #}}}
     g:repeat_sequence = sequence
-    augroup RepeatCustomMotion | au!
-        # Should it be `au! * <buffer>`?{{{
+    augroup RepeatCustomMotion | autocmd!
+        # Should it be `autocmd! * <buffer>`?{{{
         #
         # In theory yes, but I don't think  it matters here; I don't see how the
         # autocmd could ever be installed in several buffers at the same time.
@@ -385,7 +385,7 @@ def repeat#set(sequence: string, count = 0) #{{{3
         # naturally  repeatable command  (e.g. `g@`).   The latter  commands are
         # much more numerous, so their reliability is more important.
         #
-        # In  any case,  if you  write `au!  * <buffer>`  here, do  the same  in
+        # In any case, if  you write `autocmd! * <buffer>` here,  do the same in
         # `#invalidate()`.
         #}}}
         # Support invocation from operator-pending mode.{{{
@@ -395,24 +395,24 @@ def repeat#set(sequence: string, count = 0) #{{{3
         # fully executed:
         #
         #     $ vim -Nu NONE -S <(cat <<'EOF'
-        #         omap <c-b> <cmd>call Func()<cr>
-        #         fu Func()
-        #             norm! l
-        #             echom b:changedtick
-        #         endfu
-        #         pu!='abcd'
+        #         omap <C-B> <Cmd>call Func()<CR>
+        #         function Func()
+        #             normal! l
+        #             echomsg b:changedtick
+        #         endfunction
+        #         put! ='abcd'
         #     EOF
         #     )
         #     " press: d C-b
-        #     :echom b:changedtick
-        #     :mess
+        #     :echomsg b:changedtick
+        #     :messages
         #     3˜
         #     4˜
         #
         # Because  of this,  synchronizing the  ticks right  now is  useless; it
         # needs to be done later, e.g. on `CursorMoved`.
         # It works because the latter is not fired in operator-pending mode.
-        # From `:h CursorMoved`:
+        # From `:help CursorMoved`:
         #
         #    > Not triggered when there is typeahead or when
         #    > an operator is pending.
@@ -430,15 +430,15 @@ def repeat#set(sequence: string, count = 0) #{{{3
         #
         #     $ vim -Nu NONE -S <(cat <<'EOF'
         #         set runtimepath^=~/.vim/pack/mine/opt/repeat
-        #         au CursorMoved,TextChanged * "
-        #         ono <c-b> <cmd>call Textobj()<cr>
-        #         fu Textobj() abort
+        #         autocmd CursorMoved,TextChanged * "
+        #         onoremap <C-B> <Cmd>call Textobj()<CR>
+        #         function Textobj() abort
         #             let input = getcharstr()
         #             call search(input)
-        #             call repeat#set(v:operator .. "\<c-b>" .. input)
-        #         endfu
+        #             call repeat#set(v:operator .. "\<C-B>" .. input)
+        #         endfunction
         #     EOF
-        #     ) +"pu!=['abxy', 'abxy']" +1
+        #     ) +"put! =['abxy', 'abxy']" +1
         #     " press: d C-b x
         #              j .
         #
@@ -450,7 +450,7 @@ def repeat#set(sequence: string, count = 0) #{{{3
         # From Vim's point  of view, `x` is not an  operator, nor a text-object;
         # you'll need to re-input `x`.
         #}}}
-        au CursorMoved <buffer> ++once repeat.tick = b:changedtick
+        autocmd CursorMoved <buffer> ++once repeat.tick = b:changedtick
     augroup END
 enddef
 
@@ -495,7 +495,7 @@ def repeat#invalidate(): string #{{{3
     # See: https://github.com/tpope/vim-repeat/commit/80261bc53193c7e602373c6da78180aabbeb4b77
     #}}}
     if exists('#RepeatCustomMotion')
-        au! RepeatCustomMotion
+        autocmd! RepeatCustomMotion
     endif
     return ''
 enddef
@@ -569,16 +569,16 @@ def Wrap(command: string, count: number) #{{{3
     # https://github.com/tpope/vim-repeat/issues/63#issue-323810749
     #
     # But I'm  concerned by unexpected  side-effects due to executing  *all* the
-    # typeahead.   Remember that  `:norm` *inserts*  keys, so  it can  limit the
+    # typeahead.  Remember  that `:normal` *inserts*  keys, so it can  limit the
     # execution to only the keys it presses.
     #
     # ---
     #
-    # You could also try to use `:norm`:
+    # You could also try to use `:normal`:
     #
     #     feedkeys((count ? count : '') .. command, 'in')
     #     →
-    #     exe 'norm! ' .. (count ? count : '') .. command
+    #     execute 'normal! ' .. (count ? count : '') .. command
     #
     # But it would prevent `u`, `U`, and `C-r` from printing some info about the undo state:
     # https://github.com/tpope/vim-repeat/issues/27
@@ -593,7 +593,7 @@ def Wrap(command: string, count: number) #{{{3
     # the less often we execute it, the better.
     #}}}
     if ticks_synchronized
-        au TextChanged <buffer> ++once repeat.tick = b:changedtick
+        autocmd TextChanged <buffer> ++once repeat.tick = b:changedtick
             | if &foldopen =~ 'undo\|all' && foldclosed('.') >= 0
             |     feedkeys('zv', 'in')
             | endif
@@ -607,7 +607,7 @@ def Getcnt(dotcount: number): string #{{{3
     # We want it to  have priority over whatever count was  saved by `#set()` so
     # that our wrapper around `.` emulates the behavior of the native `.`:
     #
-    #     $ vim -Nu NONE +"sil pu! =range(1, 10) | 1"
+    #     $ vim -Nu NONE +"silent put! =range(1, 10) | :1"
     #     " press:  2dd
     #               3.
     #
@@ -621,7 +621,7 @@ def Getcnt(dotcount: number): string #{{{3
     #
     # So that our wrapper around `.` emulates the native `.`:
     #
-    #     $ vim -Nu NONE +"sil pu! =range(1, 10) | 1"
+    #     $ vim -Nu NONE +"silent put! =range(1, 10) | :1"
     #     " press:  2dd
     #               .
     #
@@ -660,7 +660,7 @@ def Getreg(): string #{{{3
         # We don't want to re-use the  last evaluation; we want to *re*-evaluate
         # the expression itself.
         #}}}
-        reg = '"=' .. getreg('=', true) .. "\r"
+        reg = '"=' .. getreg('=', true) .. "\<CR>"
     endif
 
     return reg
