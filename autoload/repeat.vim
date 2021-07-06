@@ -1,13 +1,10 @@
 vim9script noclear
 
-if exists('loaded') | finish | endif
-var loaded = true
-
 # Documentation {{{1
 #
 # Basic usage is as follows:
 #
-#     silent! call repeat#set("\<Plug>(my_map)", 3)
+#     silent! call repeat#set("\<Plug>(my-map)", 3)
 #
 # The first  argument is the mapping  that will be  invoked when the `.`  key is
 # pressed.
@@ -22,11 +19,11 @@ var loaded = true
 # For  mappings  that  use  a  register  and want  the  same  register  used  on
 # repetition, write:
 #
-#     " before any other command (they could reset `v:register`)
+#     # before any other command (they could reset `v:register`)
 #     let regname = v:register
 #     ...
-#     " after all your other commands
-#     silent! call repeat#setreg("\<Plug>(my_map)", regname)
+#     # after all your other commands
+#     silent! call repeat#setreg("\<Plug>(my-map)", regname)
 
 # FAQ {{{1
 # `.` does not repeat my last *custom* command! {{{2
@@ -36,13 +33,13 @@ var loaded = true
 #
 #      v-------v
 #     :noautocmd update
-#     " or
+#     # or
 #     :autocmd CursorHold * update
 #
 # Make sure they do trigger events:
 #
 #     :update
-#     " or
+#     # or
 #     :autocmd CursorHold * ++nested update
 #                           ^------^
 #
@@ -64,62 +61,55 @@ var loaded = true
 # You don't want `#set()` to save this modified `v:count`; you want the original one.
 #
 #     ✘
-#     $ vim -Nu NONE -S <(cat <<'EOF'
-#         set runtimepath^=~/.vim/pack/mine/opt/repeat
-#         autocmd CursorMoved,TextChanged * "
-#         nnoremap <C-B> <Cmd>call Func()<CR>
-#         function Func() abort
-#             for i in range(v:count1)
-#                 normal! 2dl
-#             endfor
-#             call repeat#set("\<C-B>")
-#         endfunction
-#         silent put! ='aabbccdd'
-#     EOF
-#     )
-#     " press:  C-b
-#     "         .
-#     " result:    dot deletes 4 characters
-#     " expected:  dot deletes 2 characters
+#     set runtimepath^=~/.vim/pack/mine/opt/repeat
+#     autocmd CursorMoved,TextChanged * #
+#     nnoremap <C-B> <Cmd>call g:Func()<CR>
+#     def g:Func()
+#         for i in range(v:count1)
+#             normal! 2dl
+#         endfor
+#         repeat#set("\<C-B>")
+#     enddef
+#     'aabbccdd'->setline(1)
+#     # press:  C-b
+#     #         .
+#     # expected:  dot deletes 2 characters
+#     # actual:    dot deletes 4 characters
+#
+# ---
 #
 #     ✔
-#     $ vim -Nu NONE -S <(cat <<'EOF'
-#         set runtimepath^=~/.vim/pack/mine/opt/repeat
-#         autocmd CursorMoved,TextChanged * "
-#         nnoremap <C-B> <Cmd>call Func()<CR>
-#         function Func() abort
-#             let cnt = v:count
-#         "   ^---------------^
-#             for i in range(v:count1)
-#                 normal! 2dl
-#             endfor
-#             call repeat#set("\<C-B>", cnt)
-#         "                             ^^^
-#         endfunction
-#         silent put! ='aabbccdd'
-#     EOF
-#     )
-#     " press:  C-b
-#     "         .
-#     " result:    dot deletes 2 characters
-#     " expected:  dot deletes 2 characters
+#     set runtimepath^=~/.vim/pack/mine/opt/repeat
+#     autocmd CursorMoved,TextChanged * #
+#     nnoremap <C-B> <Cmd>call g:Func()<CR>
+#     def g:Func()
+#         var cnt = v:count
+#         # ^-------------^
+#         for i in range(v:count1)
+#             normal! 2dl
+#         endfor
+#         repeat#set("\<C-B>", cnt)
+#         #                    ^^^
+#     enddef
+#     'aabbccdd'->setline(1)
+#     # press:  C-b
+#     #         .
+#     # expected:  dot deletes 2 characters
+#     # actual:    dot deletes 2 characters
 
 # I have `set cpoptions+=y`, and my last command is `yy`.  `.` does not repeat it!  Instead, it repeats an older command! {{{2
 #
-#     $ vim -Nu NONE -S <(cat <<'EOF'
-#         set runtimepath^=~/.vim/pack/mine/opt/repeat
-#         autocmd CursorMoved,TextChanged * "
-#         nnoremap <C-B> xp<Cmd>call repeat#set('<C-B>')<CR>
-#         :% delete
-#         put! ='abc'
-#         set cpoptions+=y
-#     EOF
-#     )
-#     " press:  C-b
-#               yy
-#               .
-#     " result:   dot repeats 'C-b'
-#     " expected: dot repeats 'yy'
+#     set runtimepath^=~/.vim/pack/mine/opt/repeat
+#     autocmd CursorMoved,TextChanged * #
+#     nnoremap <C-B> xp<Cmd>call repeat#set('<C-B>')<CR>
+#     :% delete
+#     'abc'->setline(1)
+#     set cpoptions+=y
+#     # press:  C-b
+#     #         yy
+#     #         .
+#     # expected: dot repeats 'yy'
+#     # actual:   dot repeats 'C-b'
 #
 # The issue is due to the fact that a yanking does not increase `b:changedtick`.
 #
@@ -170,22 +160,21 @@ augroup RepeatPlugin | autocmd!
     #
     # MWE:
     #
-    #     # remove `BufUnload`
-    #     $ vim -Nu NONE -S <(cat <<'EOF'
-    #         set runtimepath^=~/.vim/pack/mine/opt/repeat
-    #         autocmd CursorMoved,TextChanged * "
-    #         nnoremap <C-B> xp<Cmd>call repeat#set('<C-B>')<CR>
-    #         :% delete
-    #         put! ='abc'
-    #     EOF
-    #     ) /tmp/file
-    #     " press:  C-b
-    #               :write
-    #               h (necessary to prevent the `CursorMoved` autocmd from fixing the bug by accident)
-    #               :edit
-    #               .
-    #     " result:   baac
-    #     " expected: abc
+    # First, remove `BufUnload` from the next autocmd, then:
+    #
+    #     set runtimepath^=~/.vim/pack/mine/opt/repeat
+    #     autocmd CursorMoved,TextChanged * #
+    #     nnoremap <C-B> xp<Cmd>call repeat#set('<C-B>')<CR>
+    #     edit /tmp/file
+    #     :% delete
+    #     'abc'->setline(1)
+    #     # press:  C-b
+    #     #         :write
+    #     #         h (necessary to prevent the `CursorMoved` autocmd from fixing the bug by accident)
+    #     #         :edit
+    #     #         .
+    #     # expected: abc
+    #     # actual:   baac
     #
     # ---
     #
@@ -316,11 +305,11 @@ def KeepTicksSynchronized(on_Enter_or_WritePost = false)
         #         edit /tmp/file1
         #     EOF
         #     )
-        #     " press:  C-b u
+        #     # press:  C-b u
         #     :edit /tmp/file2
-        #     " press:  .
-        #     " result:  aabc
-        #     " expected:  bac
+        #     # press:  .
+        #     # expected: bac
+        #     # actual:   aabc
         #
         # When `:edit /tmp/file2` is run, these events are fired:
         #
@@ -340,9 +329,9 @@ enddef
 # `v:count` can be used for that:
 #
 #     if v:count
-#         " some count was used
+#         # some count was used
 #     else
-#         " no count was used
+#         # no count was used
 #     endif
 #
 # It works because `v:count` is 0 when no explicit count was pressed.
@@ -364,8 +353,8 @@ endif
 
 # Functions {{{1
 # Interface {{{2
-def repeat#set(sequence: string, count = 0) #{{{3
-    repeat.set = {seq: sequence, count: count != 0 ? count : v:count}
+def repeat#set(sequence: string, count = -1) #{{{3
+    repeat.set = {seq: sequence, count: count != -1 ? count : v:count}
     repeat.tick = b:changedtick
     # Some plugin may inspect `g:repeat_sequence`.{{{
     #
@@ -394,18 +383,14 @@ def repeat#set(sequence: string, count = 0) #{{{3
         # `b:changedtick` is not incremented until the operator command has been
         # fully executed:
         #
-        #     $ vim -Nu NONE -S <(cat <<'EOF'
-        #         omap <C-B> <Cmd>call Func()<CR>
-        #         function Func()
-        #             normal! l
-        #             echomsg b:changedtick
-        #         endfunction
-        #         put! ='abcd'
-        #     EOF
-        #     )
-        #     " press: d C-b
+        #     omap <C-B> <Cmd>call g:Func()<CR>
+        #     def g:Func()
+        #         normal! l
+        #         echomsg b:changedtick
+        #     enddef
+        #     'abcd'->setline(1)
+        #     feedkeys("d\<C-B>", 'xt')
         #     :echomsg b:changedtick
-        #     :messages
         #     3˜
         #     4˜
         #
@@ -425,22 +410,20 @@ def repeat#set(sequence: string, count = 0) #{{{3
         # Even if the  ticks are desynchronized, the native `.`  command will be
         # executed, and will correctly repeat the last operator + text-object.
         #
-        # But it may have been useful for some omaps before 7.3.918.
+        # But it might have been useful for some omaps before 7.3.918.
         # However, it *is* needed for `vim-sneak` (to repeat sth like `dfx`):
         #
-        #     $ vim -Nu NONE -S <(cat <<'EOF'
-        #         set runtimepath^=~/.vim/pack/mine/opt/repeat
-        #         autocmd CursorMoved,TextChanged * "
-        #         onoremap <C-B> <Cmd>call Textobj()<CR>
-        #         function Textobj() abort
-        #             let input = getcharstr()
-        #             call search(input)
-        #             call repeat#set(v:operator .. "\<C-B>" .. input)
-        #         endfunction
-        #     EOF
-        #     ) +"put! =['abxy', 'abxy']" +1
-        #     " press: d C-b x
-        #              j .
+        #     set runtimepath^=~/.vim/pack/mine/opt/repeat
+        #     autocmd CursorMoved,TextChanged * #
+        #     onoremap <C-B> <Cmd>call g:Textobj()<CR>
+        #     def g:Textobj()
+        #         var input = getcharstr()
+        #         search(input)
+        #         repeat#set(v:operator .. "\<C-B>" .. input)
+        #     enddef
+        #     ['abxy', 'abxy']->setline(1)
+        #     # press: d C-b x
+        #     #        j .
         #
         # If you  want the last dot  command to repeat  `d C-b x`, you  need the
         # next autocmd, so  that the ticks are synchronized and  the sequence is
@@ -607,9 +590,9 @@ def Getcnt(dotcount: number): string #{{{3
     # We want it to  have priority over whatever count was  saved by `#set()` so
     # that our wrapper around `.` emulates the behavior of the native `.`:
     #
-    #     $ vim -Nu NONE +"silent put! =range(1, 10) | :1"
-    #     " press:  2dd
-    #               3.
+    #     range(1, 10)->setline(1)
+    #     # press:  2dd
+    #     #         3.
     #
     # `3.` deletes 3 lines.
     # The counts are not combined (multiplied);  the count in front of `.` (here
@@ -621,9 +604,9 @@ def Getcnt(dotcount: number): string #{{{3
     #
     # So that our wrapper around `.` emulates the native `.`:
     #
-    #     $ vim -Nu NONE +"silent put! =range(1, 10) | :1"
-    #     " press:  2dd
-    #               .
+    #     range(1, 10)->setline(1)
+    #     # press:  2dd
+    #     #         .
     #
     # `.` deletes 2 lines; it repeats the last command *and* the last count.
     #}}}
