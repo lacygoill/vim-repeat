@@ -65,7 +65,7 @@ vim9script noclear
 #     autocmd CursorMoved,TextChanged * #
 #     nnoremap <C-B> <Cmd>call g:Func()<CR>
 #     def g:Func()
-#         for i in range(v:count1)
+#         for i: number in range(v:count1)
 #             normal! 2dl
 #         endfor
 #         repeat#set("\<C-B>")
@@ -85,7 +85,7 @@ vim9script noclear
 #     def g:Func()
 #         var cnt = v:count
 #         # ^-------------^
-#         for i in range(v:count1)
+#         for i: number in range(v:count1)
 #             normal! 2dl
 #         endfor
 #         repeat#set("\<C-B>", cnt)
